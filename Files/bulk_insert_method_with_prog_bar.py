@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import psycopg as pg
 
 BULK_WORKERS = 4  # Number of threads to use - adjust as needed
+CHUNK_SIZE = 50000
 
 
 def connect() -> pg.Connection:
@@ -66,7 +67,7 @@ def progress_bar(i, ttl, bar_len=50) -> None:
     print(f'\r[{'#' * pct + '-' * (bar_len - pct)}] {percent:.2f}%', end='')
 
 
-def chunk_data(data: dict, chunk_size: int = 50000) -> list[dict]:
+def chunk_data(data: dict) -> list[dict]:
     '''
     Chunk the data into smaller pieces
 
@@ -81,9 +82,9 @@ def chunk_data(data: dict, chunk_size: int = 50000) -> list[dict]:
         keys = list(data.keys())
         values = list(data.values())
         chunked_data = []
-        for i in range(0, len(values[0]), chunk_size):
+        for i in range(0, len(values[0]), CHUNK_SIZE):
             chunk_keys = keys
-            chunk_values = [v[i:i + chunk_size] for v in values]
+            chunk_values = [v[i:i + CHUNK_SIZE] for v in values]
             chunked_data.append(dict(zip(chunk_keys, chunk_values)))
         return chunked_data
     except Exception as e:
