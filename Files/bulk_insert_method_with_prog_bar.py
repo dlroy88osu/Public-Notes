@@ -73,7 +73,6 @@ def chunk_data(data: dict) -> list[dict]:
 
     Args:
         data (dict): data to insert formatted as a dictionary of lists
-        chunk_size (int): size of the chunks
 
     Returns:
         list[dict]: list of dictionaries of the chunked data
@@ -105,9 +104,9 @@ def insert(chunk: dict, table: str) -> None:
 
     comp = re.compile(r"^\s*(''|nan|N/A|NULL|NAT)\s*$", re.IGNORECASE)
     val = '\n'.join('|'.join(comp.sub('', cln(col)).replace('\n', '').replace('\r', '')
-                             for col in row) for row in zip(*chunk.values()))
+                             for col in row) for row in zip(*chunk.values()))  # type: ignore
     query = (f'''
-        COPY rxmedimate.{table} ({chunk.keys()}) FROM STDIN
+        COPY rxmedimate.{table} ({', '.join(chunk.keys())}) FROM STDIN
         WITH (FORMAT CSV, DELIMITER E'|', QUOTE E'"', ESCAPE E'"')
     ''')
     with connect() as conn:
@@ -118,4 +117,4 @@ def insert(chunk: dict, table: str) -> None:
             conn.commit()
         except Exception as e:
             conn.rollback()
-            raise RuntimeError(f'Error inserting > {str(e)}') from e
+            raise RuntimeError(f'Error inserting data > {str(e)}')
